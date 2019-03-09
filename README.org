@@ -11,12 +11,23 @@ s_client= rather than using a full mail client. They are also generally useful
 if you're trying to understand the basics of how these protocols work under the
 hood.
 
+So far only [[https://tools.ietf.org/html/rfc4616][RFC 4616 PLAIN SASL]] authentication has been implemented. This should
+work for the nearly all real-world mail servers that secure connections using
+[[https://www.ietf.org/rfc/rfc3207.txt][STARTTLS]] (or native TLS). Enhancements to support other authentication schemes
+(e.g. CRAM-MD5 and DIGEST-MD5) are welcome!
+
 This code is free software, licensed under the GPLv3, or (at your option) any
 later version.
 
 ** Installation
 
-Use the =setup.py= as you would for any other Python project:
+Install from [[https://pypi.org/project/mail-auth-utils/][PyPI]]:
+
+#+BEGIN_SRC
+$ pip install mail-auth-utils
+#+END_SRC
+
+Or use the =setup.py= as you would for any other Python project:
 
 #+BEGIN_SRC
 $ python setup.py install
@@ -24,21 +35,19 @@ $ python setup.py install
 
 ** Usage
 
-Generally all of the commands all of the commands will accept a positional
-username, and optionally a password using =-p= or =--password=. If no password
-is supplied you will be prompted for secure password entry on the command line.
-The commands will all print the protocol string used to authenticate, and then
-the authentication credentials.
+All of the commands all of the commands will accept a positional username, and
+optionally a password using =-p= or =--password=. If no username is provided, a
+default will be guessed based on the environment; this probably isn't correct
+unless you're using local mail delivery, so be sure to specify a username! If no
+password is supplied you will be prompted for secure password entry on stdin.
 
-You send the commands to the server in the same order as the lines printed by
-these auth commands. If this sounds confusing, the exact usage should be clear
-from the examples below. All of the protocol examples use =gnutls-cli= for
-interaction with the remote server. Strings sent by the server are prefixed with
-=S:=, while strings sent by the client (i.e. you) are prefixed with =C:=.
-
-So far I have only implemented PLAIN login capabilities with these commands.
-This should work for the vast majority of mail servers, but enhancements to
-support other login methods (e.g. CRAM-MD5 and DIGEST-MD5) are welcome!
+The commands will all print the protocol string used to authenticate, which may
+be multiple lines if the authentication protocol requires interaction with the
+server. If this sounds confusing, the exact usage should be clear from the
+examples below. All of the protocol examples use =gnutls-cli= for interaction
+with the remote server. Strings sent by the server are prefixed with =S:= and
+strings sent by the client (i.e. you) are prefixed with =C:=, which is the same
+convention used in the IETF mail RFCs.
 
 *** SMTP AUTH
 
@@ -80,7 +89,8 @@ dGVzdHVzZXIAdGVzdHVzZXIAdGVzdHBhc3M=
 #+END_SRC
 
 The protocol should look something like this using with an IMAP server using
-IMAPS (*not* STARTTLS):
+IMAPS on port 993 (note that this is /not/ STARTTLS, as IMAP generally uses
+native TLS on this port):
 
 #+BEGIN_SRC
 $ gnutls-cli -p 993 imap.mydomain.com
@@ -105,7 +115,7 @@ The protocol should look something like this for a remote ManageSieve server
 that uses STARTTLS:
 
 #+BEGIN_SRC
-$ gnutls-cli -p 4190 imap.mydomain.com
+$ gnutls-cli -s -p 4190 imap.mydomain.com
 S: "IMPLEMENTATION" "Dovecot Pigeonhole"
    ...
    OK "Dovecot ready."

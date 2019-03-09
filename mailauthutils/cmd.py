@@ -16,6 +16,7 @@
 import argparse
 import getpass
 import logging
+import os
 
 from typing import Tuple
 
@@ -37,6 +38,14 @@ def new_parser(description: str) -> argparse.ArgumentParser:
     return parser
 
 
+def _default_user() -> str:
+    """Select a default username."""
+    mailenv = os.environ.get('MAIL')
+    if mailenv:
+        return mailenv
+    return getpass.getuser()
+
+
 def parse_args_and_password(parser: argparse.ArgumentParser
                             ) -> Tuple[argparse.Namespace, str, str]:
     """Parse options and return the args, username, and password.
@@ -50,10 +59,13 @@ def parse_args_and_password(parser: argparse.ArgumentParser
         level=logging.DEBUG if args.verbose else logging.INFO,
         format='%(levelname)s: %(message)s')
 
-    user = args.user or getpass.getuser()
+    user = args.user
+    if not user:
+        user = _default_user()
+        logging.info('Using default username %s', user)
+
     passwd = args.password
     if not passwd:
-        passwd = getpass.getpass(
-            'Password for remote user "{}": '.format(user))
+        passwd = getpass.getpass('Password for remote user {}: '.format(user))
 
     return args, user, passwd

@@ -16,7 +16,7 @@
 import base64
 import logging
 
-from typing import List, Union
+from typing import Union
 
 
 def b64encode(auth: Union[str, bytes]) -> str:
@@ -26,7 +26,7 @@ def b64encode(auth: Union[str, bytes]) -> str:
     return base64.encodebytes(auth).decode('utf8').strip()
 
 
-def plain_auth(*args: List[str], prefix_null=True) -> str:
+def plain_auth(*args, prefix_null=True) -> str:
     """Generate a base64 encoded PLAIN SASL string, as described by RFC 4616.
 
     By default the encoded string will be prefixed with an initial NUL byte;
