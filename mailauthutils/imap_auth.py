@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .cmd import cmd_get_userhost_and_password, b64encode
+from .cmd import new_parser, parse_args_and_password
+from .auth import plain_auth
 
 
 def main():
-    user, passwd = cmd_get_userhost_and_password(
-        'Generate an SMTP AUTH LOGIN string')
-    print('AUTH LOGIN')
-    print(b64encode(user))
-    print(b64encode(passwd))
+    parser = new_parser('Generate an IMAP AUTHENTICATE PLAIN login string')
+    _, user, passwd = parse_args_and_password(parser)
+    print('1 AUTHENTICATE PLAIN')
+    print(plain_auth(user, user, passwd, prefix_null=False))

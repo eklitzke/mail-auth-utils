@@ -13,19 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
-from .cmd import cmd_get_userhost_and_password, b64encode
+from .cmd import new_parser, parse_args_and_password
+from .auth import plain_auth
 
 
 def main():
-    user, passwd = cmd_get_userhost_and_password(
-        'Generate an IMAP LOGIN PLAIN auth string')
-    authstring = b'%b\0%b\0%b' % (user, user, passwd)
-    logging.debug('Raw authstring %s', authstring)
-    print('1 AUTHENTICATE PLAIN')
-    print(b64encode(authstring))
-
-
-if __name__ == '__main__':
-    main()
+    parser = new_parser(
+        'Generate a ManageSieve AUTHENTICATE PLAIN login string')
+    _, user, passwd = parse_args_and_password(parser)
+    print('AUTHENTICATE "PLAIN" "{}"'.format(plain_auth(user, passwd)))

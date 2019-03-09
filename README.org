@@ -24,10 +24,11 @@ $ python setup.py install
 
 ** Usage
 
-Generally all of the commands all of the commands will accept a username and
-password as command arguments. If no password is supplied you will be prompted
-for secure password entry on the command line. The commands will all print the
-protocol string used to authenticate, and then the authentication credentials.
+Generally all of the commands all of the commands will accept a positional
+username, and optionally a password using =-p= or =--password=. If no password
+is supplied you will be prompted for secure password entry on the command line.
+The commands will all print the protocol string used to authenticate, and then
+the authentication credentials.
 
 You send the commands to the server in the same order as the lines printed by
 these auth commands. If this sounds confusing, the exact usage should be clear
@@ -39,18 +40,17 @@ So far I have only implemented PLAIN login capabilities with these commands.
 This should work for the vast majority of mail servers, but enhancements to
 support other login methods (e.g. CRAM-MD5 and DIGEST-MD5) are welcome!
 
-*** SMTP Login
+*** SMTP AUTH
 
-Generate a base64 encoded username and password using =smtp-login=. The command
-will print an SMTP login command followed by the encoded username and then the
-encoded password:
+Generate an AUTH PLAIN login command using =smtp-auth=:
 
 #+BEGIN_SRC
-$ smtp-login -u testuser -p testpass
-AUTH LOGIN
-dGVzdHVzZXI=
-dGVzdHBhc3M=
+$ smtp-auth -p testpass testuser
+AUTH PLAIN AHRlc3R1c2VyAHRlc3RwYXNz
 #+END_SRC
+
+You can also use the =--auth-login= option to generate a legacy =AUTH LOGIN=
+command instead of =AUTH PLAIN=.
 
 The protocol should look something like this with an SMTP server that uses
 STARTTLS:
@@ -63,22 +63,18 @@ S: ...
 C: STARTTLS
 S: 220 2.0.0 Ready to start TLS
 <type Ctrl-D in gnutls-cli>
-C: AUTH LOGIN
-S: 334 VXNlcm5hbWU6
-C: dGVzdHVzZXI=
-S: 334 UGFzc3dvcmQ6
-C: dGVzdHBhc3M=
+C: AUTH PLAIN AHRlc3R1c2VyAHRlc3RwYXNz
 S: 235 2.0.0 OK Authenticated
 #+END_SRC
 
 *** IMAP PLAIN Authentication
 
-Generate a base64 encoded username and password using =imap-plain-login=. The
+Generate a base64 encoded username and password using =imap-auth=. The
 command will print an IMAP authenticate protocol message followed by the encoded
 username and password:
 
 #+BEGIN_SRC
-$ imap-plain-login -u testuser -p testpass
+$ imap-auth -p testpass testuser
 1 AUTHENTICATE PLAIN
 dGVzdHVzZXIAdGVzdHVzZXIAdGVzdHBhc3M=
 #+END_SRC
@@ -97,11 +93,11 @@ S: 1 OK [CAPABILITY IMAP4rev1 ....] Logged in
 
 *** ManageSieve PLAIN Authentication
 
-Generate a base64 encoded username and password using =sieve-plain-login=
+Generate a base64 encoded username and password using =sieve-auth=
 (typically this would be the same username and password you use for IMAP):
 
 #+BEGIN_SRC
-$ sieve-plain-login -u testuser -p testpass
+$ sieve-auth -p testpass testuser
 AUTHENTICATE "PLAIN" "AHRlc3R1c2VyAHRlc3RwYXNz"
 #+END_SRC
 

@@ -10,9 +10,9 @@ setup(
     packages=['mailauthutils'],
     entry_points={
         'console_scripts': [
-            'imap-plain-login = mailauthutils.imap_plain:main',
-            'sieve-plain-login = mailauthutils.sieve_plain:main',
-            'smtp-login = mailauthutils.smtp_login:main',
+            'imap-auth = mailauthutils.imap_auth:main',
+            'sieve-auth = mailauthutils.sieve_auth:main',
+            'smtp-auth = mailauthutils.smtp_auth:main',
         ]
     },
 )

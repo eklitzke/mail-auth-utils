@@ -13,14 +13,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
-from .cmd import cmd_get_userhost_and_password, b64encode
+from .cmd import new_parser, parse_args_and_password
+from .auth import plain_auth, b64encode
 
 
 def main():
-    user, passwd = cmd_get_userhost_and_password(
-        'Generate a ManageSieve AUTHENTICATE PLAIN auth string')
-    authstring = b'\0%b\0%b' % (user, passwd)
-    logging.debug('Raw authstring %s', authstring)
-    print('AUTHENTICATE "PLAIN" "{}"'.format(b64encode(authstring)))
+    parser = new_parser('Generate an SMTP AUTH PLAIN (or LOGIN) string')
+    parser.add_argument(
+        '--auth-login',
+        action='store_true',
+        help='Output an AUTH LOGIN command (instead of AUTH PLAIN)')
+
+    args, user, passwd = parse_args_and_password(parser)
+    if args.auth_login:
+        print('AUTH LOGIN')
+        print(b64encode(user))
+        print(b64encode(passwd))
+    else:
+        print('AUTH PLAIN {}'.format(plain_auth(user, passwd)))
