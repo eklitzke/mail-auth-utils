@@ -1,0 +1,122 @@
+#+AUTHOR: Evan Klitzke
+#+EMAIL: evan@eklitzke.org
+
+* Mail Auth Utils
+
+This is a collection of Python scripts for generating login/authentication
+strings for SMTP, IMAP, and ManageSieve servers. These scripts are useful if
+you're trying to debug an auth problem with one of these servers, and want to
+login manually using a telnet-like program like =gnutls-cli= or =openssl
+s_client= rather than using a full mail client. They are also generally useful
+if you're trying to understand the basics of how these protocols work under the
+hood.
+
+This code is free software, licensed under the GPLv3, or (at your option) any
+later version.
+
+** Installation
+
+Use the =setup.py= as you would for any other Python project:
+
+#+BEGIN_SRC
+$ python setup.py install
+#+END_SRC
+
+** Usage
+
+Generally all of the commands all of the commands will accept a username and
+password as command arguments. If no password is supplied you will be prompted
+for secure password entry on the command line. The commands will all print the
+protocol string used to authenticate, and then the authentication credentials.
+
+You send the commands to the server in the same order as the lines printed by
+these auth commands. If this sounds confusing, the exact usage should be clear
+from the examples below. All of the protocol examples use =gnutls-cli= for
+interaction with the remote server. Strings sent by the server are prefixed with
+=S:=, while strings sent by the client (i.e. you) are prefixed with =C:=.
+
+So far I have only implemented PLAIN login capabilities with these commands.
+This should work for the vast majority of mail servers, but enhancements to
+support other login methods (e.g. CRAM-MD5 and DIGEST-MD5) are welcome!
+
+*** SMTP Login
+
+Generate a base64 encoded username and password using =smtp-login=. The command
+will print an SMTP login command followed by the encoded username and then the
+encoded password:
+
+#+BEGIN_SRC
+$ smtp-login -u testuser -p testpass
+AUTH LOGIN
+dGVzdHVzZXI=
+dGVzdHBhc3M=
+#+END_SRC
+
+The protocol should look something like this with an SMTP server that uses
+STARTTLS:
+
+#+BEGIN_SRC
+$ gnutls-cli -s -p 25 smtp.mydomain.com
+S: 220 smtp.mydomain.com ESMTP Postfix Ready
+C: EHLO smtp.mydomain.com
+S: ...
+C: STARTTLS
+S: 220 2.0.0 Ready to start TLS
+<type Ctrl-D in gnutls-cli>
+C: AUTH LOGIN
+S: 334 VXNlcm5hbWU6
+C: dGVzdHVzZXI=
+S: 334 UGFzc3dvcmQ6
+C: dGVzdHBhc3M=
+S: 235 2.0.0 OK Authenticated
+#+END_SRC
+
+*** IMAP PLAIN Authentication
+
+Generate a base64 encoded username and password using =imap-plain-login=. The
+command will print an IMAP authenticate protocol message followed by the encoded
+username and password:
+
+#+BEGIN_SRC
+$ imap-plain-login -u testuser -p testpass
+1 AUTHENTICATE PLAIN
+dGVzdHVzZXIAdGVzdHVzZXIAdGVzdHBhc3M=
+#+END_SRC
+
+The protocol should look something like this using with an IMAP server using
+IMAPS (*not* STARTTLS):
+
+#+BEGIN_SRC
+$ gnutls-cli -p 993 imap.mydomain.com
+S: * OK [CAPABILITY IMAP4rev1 ...] Dovecot ready.
+C: 1 AUTHENTICATE PLAIN
+S: +
+C: dGVzdHVzZXIAdGVzdHVzZXIAdGVzdHBhc3M=
+S: 1 OK [CAPABILITY IMAP4rev1 ....] Logged in
+#+END_SRC
+
+*** ManageSieve PLAIN Authentication
+
+Generate a base64 encoded username and password using =sieve-plain-login=
+(typically this would be the same username and password you use for IMAP):
+
+#+BEGIN_SRC
+$ sieve-plain-login -u testuser -p testpass
+AUTHENTICATE "PLAIN" "AHRlc3R1c2VyAHRlc3RwYXNz"
+#+END_SRC
+
+The protocol should look something like this for a remote ManageSieve server
+that uses STARTTLS:
+
+#+BEGIN_SRC
+$ gnutls-cli -p 4190 imap.mydomain.com
+S: "IMPLEMENTATION" "Dovecot Pigeonhole"
+   ...
+   OK "Dovecot ready."
+C: STARTTLS
+S: OK "Begin TLS negotiation now."
+<type Ctrl-D in gnutls-cli>
+S: OK "TLS negotiation successful."
+C: AUTHENTICATE "PLAIN" "AHRlc3R1c2VyAHRlc3RwYXNz"
+S: OK "Logged in."
+#+END_SRC
